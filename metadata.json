@@ -1,0 +1,7 @@
+{
+  "name": "Agriphyt - Pesticide Database",
+  "description": "An application to search compounds, analyze data, and manage your pesticide database with features like compatibility checking and rule management.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
