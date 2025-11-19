@@ -1,13 +1,17 @@
 
-export type PesticideTag = 'SYSTEMIC' | 'CONTACT' | 'CURATIVE' | 'PREVENTIVE';
+export type PesticideTag = 'SYSTEMIC' | 'CONTACT' | 'CURATIVE' | 'PREVENTIVE' | 'INGESTION';
+
+export type PesticideType = 'Insecticide' | 'Herbicide' | 'Fongicide';
 
 export interface Pesticide {
   id: number;
   name: string;
+  type: PesticideType;
   tags: PesticideTag[];
   activeIngredient: string;
   family: string;
   irac: string;
+  chemicalDetails: string;
   targetStage: string[];
   modeOfAction: string;
   dosage: string;
@@ -27,6 +31,23 @@ export interface CompatibilityRule {
   created: string;
   modified: string;
   version: number;
+}
+
+export type ModeOfActionCategory = 'Nerve & Muscle' | 'Respiration' | 'Midgut' | 'Growth & Development' | 'Unknown / Other';
+
+export interface ModeOfActionInfo {
+    category: ModeOfActionCategory;
+    styles: {
+        bg: string;
+        text: string;
+        border: string;
+        dot: string;
+    };
+}
+
+export interface IracData {
+  code: string;
+  modeOfAction: string;
 }
 
 export type Page = 'overview' | 'database' | 'add' | 'profile';

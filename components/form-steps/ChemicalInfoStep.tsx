@@ -1,22 +1,75 @@
-import React from 'react';
-import { Pesticide } from '../../types';
-import { BeakerIcon } from '../Icons';
+
+import React, { useState, useEffect } from 'react';
+import { Pesticide, PesticideType, IracData } from '../../types';
+import { BeakerIcon, BugIcon, LeafIcon, MicroscopeIcon } from '../Icons';
 
 interface ChemicalInfoStepProps {
   data: Partial<Pesticide>;
   updateData: (data: Partial<Pesticide>) => void;
   families: string[];
   modesOfAction: string[];
+  iracData: IracData[] | null;
 }
 
 const formFieldClasses = "w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400";
 const formLabelClasses = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
 
-const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, families, modesOfAction }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    updateData({ [e.target.name]: e.target.value });
+const TypeCard: React.FC<{
+    value: PesticideType, label: string, icon: React.ReactNode, selected: boolean, onSelect: (value: PesticideType) => void
+}> = ({ value, label, icon, selected, onSelect }) => (
+    <div onClick={() => onSelect(value)} className={`flex flex-col items-center justify-center p-4 border rounded-lg cursor-pointer transition-all ${selected ? 'bg-green-50 dark:bg-primary/20 border-primary ring-2 ring-primary' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}`}>
+        {icon}
+        <p className="font-bold text-gray-800 dark:text-gray-100 mt-2">{label}</p>
+    </div>
+);
+
+const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, families, modesOfAction, iracData }) => {
+  const [isAddingFamily, setIsAddingFamily] = useState(false);
+  const [isAddingMode, setIsAddingMode] = useState(false);
+
+  useEffect(() => {
+      if (data.family && !families.includes(data.family)) {
+          setIsAddingFamily(true);
+      }
+      if (data.modeOfAction && !modesOfAction.includes(data.modeOfAction)) {
+          setIsAddingMode(true);
+      }
+  }, [data.family, data.modeOfAction, families, modesOfAction]);
+
+  const handleFamilyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === '__add_new__') {
+        setIsAddingFamily(true);
+        updateData({ family: '' });
+    } else {
+        setIsAddingFamily(false);
+        updateData({ family: value });
+    }
   };
-  
+
+  const handleModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === '__add_new__') {
+        setIsAddingMode(true);
+        updateData({ modeOfAction: '' });
+    } else {
+        setIsAddingMode(false);
+        updateData({ modeOfAction: value });
+    }
+  };
+
+  const handleIracChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const selectedCode = e.target.value;
+      const iracEntry = iracData?.find(d => d.code === selectedCode);
+      if (iracEntry) {
+          updateData({ irac: iracEntry.code, modeOfAction: iracEntry.modeOfAction });
+      } else {
+          updateData({ irac: selectedCode, modeOfAction: '' });
+      }
+  };
+
+  const isModeOfActionLocked = !!(iracData && data.irac && iracData.some(d => d.code === data.irac));
+
   return (
     <div className="space-y-6 animate-fadeIn">
        <div className="flex flex-col items-center text-center">
@@ -29,13 +82,22 @@ const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, f
 
       <div className="max-w-xl mx-auto space-y-4">
         <div>
+          <label className={formLabelClasses}>Type of Active Ingredient *</label>
+          <div className="grid grid-cols-3 gap-4">
+              <TypeCard value="Insecticide" label="Insecticide" icon={<BugIcon className="h-7 w-7 text-red-500"/>} selected={data.type === 'Insecticide'} onSelect={(v) => updateData({ type: v })} />
+              <TypeCard value="Herbicide" label="Herbicide" icon={<LeafIcon className="h-7 w-7 text-green-500"/>} selected={data.type === 'Herbicide'} onSelect={(v) => updateData({ type: v })} />
+              <TypeCard value="Fongicide" label="Fongicide" icon={<MicroscopeIcon className="h-7 w-7 text-blue-500"/>} selected={data.type === 'Fongicide'} onSelect={(v) => updateData({ type: v })} />
+          </div>
+        </div>
+
+        <div>
           <label htmlFor="activeIngredient" className={formLabelClasses}>Active Ingredient *</label>
           <input
               type="text"
               id="activeIngredient"
               name="activeIngredient"
               value={data.activeIngredient || ''}
-              onChange={handleChange}
+              onChange={(e) => updateData({ activeIngredient: e.target.value })}
               className={formFieldClasses}
               placeholder="e.g., Glyphosate"
               required
@@ -47,43 +109,105 @@ const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, f
           <select
             id="family"
             name="family"
-            value={data.family || ''}
-            onChange={handleChange}
+            value={isAddingFamily ? '__add_new__' : data.family || ''}
+            onChange={handleFamilyChange}
             className={formFieldClasses}
             required
           >
             <option value="" disabled>Select chemical family...</option>
             {families.map(family => <option key={family} value={family}>{family}</option>)}
+            <option value="__add_new__">Add New...</option>
           </select>
+          {isAddingFamily && (
+            <input
+              type="text"
+              value={data.family || ''}
+              onChange={(e) => updateData({ family: e.target.value })}
+              className={`${formFieldClasses} mt-2`}
+              placeholder="Enter new chemical family"
+              autoFocus
+            />
+          )}
         </div>
 
         <div>
-          <label htmlFor="irac" className={formLabelClasses}>IRAC Code *</label>
-          <input
-            type="text"
-            id="irac"
-            name="irac"
-            value={data.irac || ''}
-            onChange={handleChange}
-            className={formFieldClasses}
-            placeholder="e.g., 9A"
-            required
-          />
+          <label htmlFor="irac" className={formLabelClasses}>IRAC/FRAC Code *</label>
+          {iracData ? (
+            <select
+                id="irac"
+                name="irac"
+                value={data.irac || ''}
+                onChange={handleIracChange}
+                className={formFieldClasses}
+                required
+            >
+                <option value="" disabled>Select IRAC code...</option>
+                {iracData.map(item => <option key={item.code} value={item.code}>{item.code} - {item.modeOfAction.substring(0, 40)}...</option>)}
+            </select>
+          ) : (
+            <input
+                type="text"
+                id="irac"
+                name="irac"
+                value={data.irac || ''}
+                onChange={(e) => updateData({ irac: e.target.value })}
+                className={formFieldClasses}
+                placeholder="e.g., 9A (Import PDF for options)"
+                required
+            />
+          )}
         </div>
 
         <div>
-          <label htmlFor="modeOfAction" className={formLabelClasses}>General Mode of Action *</label>
-          <select
-            id="modeOfAction"
-            name="modeOfAction"
-            value={data.modeOfAction || ''}
-            onChange={handleChange}
-            className={formFieldClasses}
-            required
-          >
-            <option value="" disabled>Select or add general mode of action...</option>
-            {modesOfAction.map(mode => <option key={mode} value={mode}>{mode}</option>)}
-          </select>
+            <label htmlFor="chemicalDetails" className={formLabelClasses}>Details</label>
+            <input
+                type="text"
+                id="chemicalDetails"
+                name="chemicalDetails"
+                value={data.chemicalDetails || ''}
+                onChange={(e) => updateData({ chemicalDetails: e.target.value })}
+                className={formFieldClasses}
+                placeholder="Enter additional chemical details..."
+            />
+        </div>
+
+        <div>
+            <label htmlFor="modeOfAction" className={formLabelClasses}>General Mode of Action *</label>
+            {isModeOfActionLocked ? (
+                <input
+                    type="text"
+                    id="modeOfAction"
+                    name="modeOfAction"
+                    value={data.modeOfAction || ''}
+                    className={`${formFieldClasses} bg-gray-100 dark:bg-gray-800`}
+                    readOnly
+                />
+            ) : (
+                <>
+                <select
+                    id="modeOfAction"
+                    name="modeOfAction"
+                    value={isAddingMode ? '__add_new__' : data.modeOfAction || ''}
+                    onChange={handleModeChange}
+                    className={formFieldClasses}
+                    required
+                >
+                    <option value="" disabled>Select or add general mode of action...</option>
+                    {modesOfAction.map(mode => <option key={mode} value={mode}>{mode}</option>)}
+                    <option value="__add_new__">Add New...</option>
+                </select>
+                {isAddingMode && (
+                    <input
+                    type="text"
+                    value={data.modeOfAction || ''}
+                    onChange={(e) => updateData({ modeOfAction: e.target.value })}
+                    className={`${formFieldClasses} mt-2`}
+                    placeholder="Enter new mode of action"
+                    autoFocus
+                    />
+                )}
+                </>
+            )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -94,7 +218,7 @@ const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, f
                     id="logP"
                     name="logP"
                     value={data.logP || ''}
-                    onChange={handleChange}
+                    onChange={(e) => updateData({ logP: e.target.value })}
                     className={formFieldClasses}
                     placeholder="e.g., 3.72"
                 />
@@ -106,7 +230,7 @@ const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, f
                     id="ph"
                     name="ph"
                     value={data.ph || ''}
-                    onChange={handleChange}
+                    onChange={(e) => updateData({ ph: e.target.value })}
                     className={formFieldClasses}
                     placeholder="e.g., 6.0-8.0"
                 />

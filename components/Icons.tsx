@@ -199,3 +199,11 @@ export const MapPinIcon: React.FC<IconProps> = ({ className }) => (
 export const CloudIcon: React.FC<IconProps> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
 );
+
+export const BugIcon: React.FC<IconProps> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 20a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/><path d="M17 10h-2a3 3 0 0 0-3-3V5a3 3 0 0 0-3 3H7"/><path d="m15 14-3 3-3-3"/></svg>
+);
+
+export const MicroscopeIcon: React.FC<IconProps> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 18h8"/><path d="M3 22h18"/><path d="M10 18v-5c0-1.7-1.3-3-3-3v0c-1.7 0-3 1.3-3 3v5"/><path d="M10 10s3-2 3-5h-2"/><path d="m13 10 3-3h-2"/><path d="M13 18v-5c0-1.7 1.3-3 3-3v0c1.7 0 3 1.3 3 3v5"/></svg>
+);

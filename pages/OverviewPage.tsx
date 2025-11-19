@@ -10,6 +10,7 @@ interface OverviewPageProps {
   compounds: Pesticide[];
   setActivePage: (page: Page) => void;
   onNavigateToAdd: () => void;
+  showNotification: (message: string, type?: 'success' | 'error') => void;
 }
 
 const tagColors: Record<PesticideTag, string> = {
@@ -17,6 +18,7 @@ const tagColors: Record<PesticideTag, string> = {
   CONTACT: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
   CURATIVE: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300',
   PREVENTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+  INGESTION: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
 };
 
 const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: number | string; }> = ({ icon, title, value }) => (
@@ -69,7 +71,7 @@ const QuickAction: React.FC<{ icon: React.ReactNode; title: string; description:
 );
 
 
-const OverviewPage: React.FC<OverviewPageProps> = ({ compounds, setActivePage, onNavigateToAdd }) => {
+const OverviewPage: React.FC<OverviewPageProps> = ({ compounds, setActivePage, onNavigateToAdd, showNotification }) => {
   const totalCompounds = compounds.length;
   const systemicCount = compounds.filter(c => c.tags.includes('SYSTEMIC')).length;
   const preventiveCount = compounds.filter(c => c.tags.includes('PREVENTIVE')).length;
@@ -178,7 +180,7 @@ const OverviewPage: React.FC<OverviewPageProps> = ({ compounds, setActivePage, o
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <QuickAction icon={<PlusCircleIcon className="h-6 w-6 text-green-600"/>} title="Add Compound" description="Register new pesticide" colorClasses="bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200" onClick={onNavigateToAdd} />
             <QuickAction icon={<DatabaseIcon className="h-6 w-6 text-blue-600"/>} title="Main Database" description="Search & manage" colorClasses="bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200" onClick={() => setActivePage('database')} />
-            <QuickAction icon={<BarChartIcon className="h-6 w-6 text-purple-600"/>} title="View Analytics" description="Analyze your data" colorClasses="bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-200" onClick={() => alert('Analytics page coming soon!')} />
+            <QuickAction icon={<BarChartIcon className="h-6 w-6 text-purple-600"/>} title="View Analytics" description="Analyze your data" colorClasses="bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-200" onClick={() => showNotification('Analytics page coming soon!', 'success')} />
             <QuickAction icon={<UserIcon className="h-6 w-6 text-orange-600"/>} title="Manage Profile" description="Update settings" colorClasses="bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200" onClick={() => setActivePage('profile')} />
         </div>
       </div>

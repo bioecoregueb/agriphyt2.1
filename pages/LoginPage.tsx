@@ -21,8 +21,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-          <button className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 hover:bg-blue-700 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M9 12h6"/><path d="M10.5 7.5 9 12l1.5 4.5"/><path d="M13.5 7.5 15 12l-1.5 4.5"/><path d="M2 12C2 6.5 6.5 2 12 2s10 4.5 10 10-4.5 10-10 10S2 17.5 2 12Z"/></svg>
+          <button className="w-full bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+            <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M9 12h6"/><path d="M10.5 7.5 9 12l1.5 4.5"/><path d="M13.5 7.5 15 12l-1.5 4.5"/><path d="M2 12C2 6.5 6.5 2 12 2s10 4.5 10 10-4.5 10-10 10S2 17.5 2 12Z"/></svg>
             <span>Sign in with Netlify Identity</span>
           </button>
 

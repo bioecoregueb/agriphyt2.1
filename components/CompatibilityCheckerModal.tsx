@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Pesticide } from '../types';
 import { XIcon, CheckIcon, FlaskConicalIcon, InfoIcon, TrashIcon } from './Icons';
+import { getCompatibilityInfo } from '../lib/gemini';
+import { marked } from 'marked';
 
 interface CompatibilityCheckerModalProps {
   isOpen: boolean;
@@ -35,17 +37,50 @@ const CompoundSelectItem: React.FC<{
 
 const CompatibilityCheckerModal: React.FC<CompatibilityCheckerModalProps> = ({ isOpen, onClose, compounds }) => {
   const [selected, setSelected] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
 
   const handleSelect = (id: number) => {
+    setResult(null); // Clear result when selection changes
     setSelected(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
 
+  const handleCheckCompatibility = async () => {
+      if (selected.length < 2) return;
+      
+      setIsLoading(true);
+      setResult(null);
+      
+      const selectedCompounds = compounds.filter(c => selected.includes(c.id)).map(c => ({ name: c.name, family: c.family }));
+      const analysis = await getCompatibilityInfo(selectedCompounds);
+      const html = marked(analysis) as string;
+      
+      setResult(html);
+      setIsLoading(false);
+  };
+
+  const handleClear = () => {
+    setSelected([]);
+    setResult(null);
+  }
+
+  const handleClose = () => {
+    handleClear();
+    onClose();
+  }
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleClose}>
+       <style>{`
+            .prose-styles-modal ul { list-style-type: disc; padding-left: 1.5rem; }
+            .prose-styles-modal li { margin-bottom: 0.5rem; }
+            .prose-styles-modal h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+            .prose-styles-modal strong { font-weight: 600; }
+        `}</style>
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
@@ -57,7 +92,7 @@ const CompatibilityCheckerModal: React.FC<CompatibilityCheckerModalProps> = ({ i
                 <p className="text-sm text-gray-500 dark:text-gray-400">Check pesticide combinations for safety and efficacy</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
             <XIcon className="h-6 w-6" />
           </button>
         </div>
@@ -87,10 +122,29 @@ const CompatibilityCheckerModal: React.FC<CompatibilityCheckerModalProps> = ({ i
             ))}
           </div>
 
-          {selected.length < 2 && (
+          {/* Result section */}
+          {isLoading && (
+            <div className="text-center mt-8 py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                <h4 className="mt-4 text-lg font-semibold text-gray-800 dark:text-gray-100">Analyzing...</h4>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Please wait while AI checks compatibility.</p>
+            </div>
+          )}
+
+          {result && (
+            <div className="mt-8">
+                <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Analysis Result</h3>
+                <div 
+                    className="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg prose-styles-modal text-gray-700 dark:text-gray-300"
+                    dangerouslySetInnerHTML={{ __html: result }}
+                >
+                </div>
+            </div>
+          )}
+
+          {!isLoading && !result && selected.length < 2 && (
              <div className="text-center mt-8 py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="mx-auto h-12 w-12 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-full text-gray-400">
-                    <TrashIcon className="h-6 w-6"/>
+                    <FlaskConicalIcon className="h-6 w-6"/>
                 </div>
                 <h4 className="mt-4 text-lg font-semibold text-gray-800 dark:text-gray-100">Select Compounds</h4>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Choose at least 2 compounds to check compatibility.</p>
@@ -98,16 +152,21 @@ const CompatibilityCheckerModal: React.FC<CompatibilityCheckerModalProps> = ({ i
           )}
         </div>
         
-        {selected.length >= 2 && (
-            <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 mt-auto">
-                <button
-                    disabled={selected.length < 2}
-                    className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-primary-dark transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                    Check Compatibility ({selected.length} selected)
-                </button>
-            </div>
-        )}
+        <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 mt-auto flex gap-3">
+             <button
+                onClick={handleClear}
+                className="w-1/3 bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+            >
+                Clear
+            </button>
+            <button
+                onClick={handleCheckCompatibility}
+                disabled={selected.length < 2 || isLoading}
+                className="w-2/3 bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-primary-dark transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed dark:disabled:bg-gray-500"
+            >
+                 {isLoading ? 'Checking...' : `Check Compatibility (${selected.length} selected)`}
+            </button>
+        </div>
       </div>
     </div>
   );

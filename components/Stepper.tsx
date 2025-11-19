@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BeakerIcon, SprayCanIcon, StoreIcon, CheckCircle2Icon, CheckIcon } from './Icons';
 
@@ -15,8 +16,8 @@ const stepIcons = [
 
 const Stepper: React.FC<StepperProps> = ({ steps, currentStep }) => {
   return (
-    <div className="w-full px-4 sm:px-8">
-      <div className="flex items-center">
+    <div className="w-full px-0 sm:px-8">
+      <div className="flex items-center justify-between">
         {steps.map((label, index) => {
           const step = index + 1;
           const isActive = step === currentStep;
@@ -25,9 +26,9 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep }) => {
 
           return (
             <React.Fragment key={step}>
-              <div className="flex flex-col items-center text-center w-32">
+              <div className="flex flex-col items-center text-center z-10">
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
                     isActive
                       ? 'bg-primary/10 border-primary'
                       : isCompleted
@@ -36,17 +37,17 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep }) => {
                   }`}
                 >
                   {isCompleted ? (
-                    <CheckIcon className="h-7 w-7 text-white" />
+                    <CheckIcon className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
                   ) : (
                     <IconComponent
-                      className={`h-6 w-6 ${
+                      className={`h-5 w-5 sm:h-6 sm:w-6 ${
                         isActive ? 'text-primary' : 'text-gray-400'
                       }`}
                     />
                   )}
                 </div>
                 <p
-                  className={`mt-2 text-xs font-semibold ${
+                  className={`mt-2 text-xs font-semibold hidden sm:block ${
                     isActive || isCompleted ? 'text-primary' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
@@ -55,7 +56,7 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep }) => {
               </div>
               {step < steps.length && (
                 <div
-                  className={`flex-auto border-t-2 transition-all duration-300 ${
+                  className={`flex-auto border-t-2 mx-2 transition-all duration-300 ${
                     isCompleted ? 'border-primary' : 'border-gray-300 dark:border-gray-600'
                   }`}
                 ></div>

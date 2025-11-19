@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Pesticide, PesticideTag } from '../types';
 import { XIcon, BeakerIcon, SparklesIcon } from './Icons';
 import { getSafetyInfo } from '../lib/gemini';
+import { getModeOfActionCategory } from '../lib/utils';
 import { marked } from 'marked';
 
 
@@ -16,6 +18,7 @@ const tagColors: Record<PesticideTag, string> = {
   CONTACT: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
   CURATIVE: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300',
   PREVENTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+  INGESTION: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
 };
 
 const DetailItem: React.FC<{ label: string; value: string | string[] }> = ({ label, value }) => (
@@ -27,33 +30,20 @@ const DetailItem: React.FC<{ label: string; value: string | string[] }> = ({ lab
   </div>
 );
 
-const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
-    // A simple renderer for basic markdown like bullet points
-    const lines = content.split('\n').map((line, index) => {
-        if (line.startsWith('* ')) {
-            return <li key={index} className="text-gray-700 dark:text-gray-300">{line.substring(2)}</li>;
-        }
-        if (line.trim().length > 0) {
-            return <p key={index} className="text-gray-700 dark:text-gray-300 mt-2">{line}</p>;
-        }
-        return null;
-    });
-
-    return <ul className="list-disc list-inside space-y-1">{lines}</ul>;
-};
-
-
 const PesticideDetailModal: React.FC<PesticideDetailModalProps> = ({ isOpen, onClose, pesticide }) => {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen || !pesticide) return null;
 
+  const moaInfo = getModeOfActionCategory(pesticide.modeOfAction);
+
   const handleAiAnalysis = async () => {
     setIsLoading(true);
     setAiAnalysis(null);
     const analysis = await getSafetyInfo(pesticide.activeIngredient);
-    setAiAnalysis(analysis);
+    const html = marked(analysis) as string;
+    setAiAnalysis(html);
     setIsLoading(false);
   };
 
@@ -65,6 +55,11 @@ const PesticideDetailModal: React.FC<PesticideDetailModalProps> = ({ isOpen, onC
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={handleClose}>
+       <style>{`
+            .prose-styles ul { list-style-type: disc; padding-left: 1.5rem; }
+            .prose-styles li { margin-bottom: 0.5rem; }
+            .prose-styles strong { font-weight: 600; }
+        `}</style>
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
@@ -93,13 +88,28 @@ const PesticideDetailModal: React.FC<PesticideDetailModalProps> = ({ isOpen, onC
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <DetailItem label="Active Ingredient" value={pesticide.activeIngredient} />
             <DetailItem label="Chemical Family" value={pesticide.family} />
-            <DetailItem label="IRAC Code" value={pesticide.irac} />
+            <DetailItem label="IRAC/FRAC Code" value={pesticide.irac} />
             <DetailItem label="Dosage" value={pesticide.dosage} />
             <DetailItem label="LogP" value={pesticide.logP} />
             <DetailItem label="pH" value={pesticide.ph} />
             <div className="md:col-span-2">
-              <DetailItem label="Mode of Action" value={pesticide.modeOfAction} />
+               <div>
+                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Mode of Action</h4>
+                <div className="flex items-center gap-3 mt-1">
+                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${moaInfo.styles.bg} ${moaInfo.styles.text}`}>
+                        {moaInfo.category}
+                    </span>
+                    <p className="text-base text-gray-800 dark:text-gray-100 font-semibold">
+                      {pesticide.modeOfAction}
+                    </p>
+                </div>
+              </div>
             </div>
+            {pesticide.chemicalDetails && (
+              <div className="md:col-span-2">
+                <DetailItem label="Chemical Details" value={pesticide.chemicalDetails} />
+              </div>
+            )}
             <div className="md:col-span-2">
               <DetailItem label="Target Stage" value={pesticide.targetStage} />
             </div>
@@ -137,9 +147,10 @@ const PesticideDetailModal: React.FC<PesticideDetailModalProps> = ({ isOpen, onC
             {aiAnalysis && (
                 <div>
                     <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-2"><SparklesIcon className="h-4 w-4 text-secondary"/>AI Safety Analysis</h4>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm border border-gray-200 dark:border-gray-600">
-                        <MarkdownRenderer content={aiAnalysis} />
-                    </div>
+                    <div 
+                        className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm border border-gray-200 dark:border-gray-600 prose-styles text-gray-700 dark:text-gray-300"
+                        dangerouslySetInnerHTML={{ __html: aiAnalysis }}
+                     />
                 </div>
             )}
           </div>

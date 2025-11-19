@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { Pesticide } from '../types';
+import { Pesticide, PesticideType, IracData } from '../types';
 import Stepper from '../components/Stepper';
 import ChemicalInfoStep from '../components/form-steps/ChemicalInfoStep';
 import ApplicationStep from '../components/form-steps/ApplicationStep';
@@ -12,13 +13,17 @@ interface AddCompoundPageProps {
   onSaveCompound: (compound: Omit<Pesticide, 'id'> & { id?: number }) => void;
   existingPesticides: Pesticide[];
   compoundToEdit: Pesticide | null;
+  showNotification: (message: string, type: 'success' | 'error') => void;
+  iracData: IracData[] | null;
 }
 
 const initialFormData: Partial<Pesticide> = {
     name: '',
+    type: 'Insecticide',
     activeIngredient: '',
     family: '',
     irac: '',
+    chemicalDetails: '',
     modeOfAction: '',
     tags: [],
     targetStage: [],
@@ -29,7 +34,7 @@ const initialFormData: Partial<Pesticide> = {
     ph: ''
 };
 
-const AddCompoundPage: React.FC<AddCompoundPageProps> = ({ onSaveCompound, existingPesticides, compoundToEdit }) => {
+const AddCompoundPage: React.FC<AddCompoundPageProps> = ({ onSaveCompound, existingPesticides, compoundToEdit, showNotification, iracData }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<Partial<Pesticide>>(initialFormData);
   
@@ -64,18 +69,20 @@ const AddCompoundPage: React.FC<AddCompoundPageProps> = ({ onSaveCompound, exist
 
   const handleSubmit = () => {
     // Basic validation
-    if (!formData.name || !formData.activeIngredient || !formData.family || !formData.dosage) {
-        alert("Please ensure all required fields are filled out.");
+    if (!formData.name || !formData.activeIngredient || !formData.family || !formData.dosage || !formData.type) {
+        showNotification("Please ensure all required fields are filled out.", 'error');
         return;
     }
 
     // Reconstruct a valid Pesticide object from formData
     const finalCompound: Omit<Pesticide, 'id'> & { id?: number } = {
         name: formData.name!,
+        type: formData.type!,
         tags: formData.tags || [],
         activeIngredient: formData.activeIngredient!,
         family: formData.family!,
         irac: formData.irac || '',
+        chemicalDetails: formData.chemicalDetails || '',
         targetStage: formData.targetStage || [],
         modeOfAction: formData.modeOfAction || '',
         dosage: formData.dosage!,
@@ -108,6 +115,7 @@ const AddCompoundPage: React.FC<AddCompoundPageProps> = ({ onSaveCompound, exist
             updateData={updateFormData} 
             families={chemicalFamilies} 
             modesOfAction={modesOfAction}
+            iracData={iracData}
           />
         )}
         {currentStep === 2 && (

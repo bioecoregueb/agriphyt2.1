@@ -8,14 +8,20 @@ interface ApplicationStepProps {
   updateData: (data: Partial<Pesticide>) => void;
 }
 
-const RadioCard: React.FC<{
-    name: string, value: string, label: string, description: string, checked: boolean, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-}> = ({ name, value, label, description, checked, onChange }) => (
-    <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${checked ? 'bg-green-50 dark:bg-primary/20 border-primary ring-2 ring-primary' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}`}>
-        <input type="radio" name={name} value={value} checked={checked} onChange={onChange} className="sr-only"/>
-        <p className="font-bold text-gray-800 dark:text-gray-100">{label}</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
-    </label>
+const SelectableCard: React.FC<{
+    label: string, description: string, checked: boolean, onChange: () => void
+}> = ({ label, description, checked, onChange }) => (
+    <div onClick={onChange} className={`block p-4 border rounded-lg cursor-pointer transition-all ${checked ? 'bg-green-50 dark:bg-primary/20 border-primary ring-2 ring-primary' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}`}>
+        <div className="flex justify-between items-center h-full">
+            <div>
+                <p className="font-bold text-gray-800 dark:text-gray-100">{label}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
+            </div>
+            {checked && <div className="h-5 w-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>}
+        </div>
+    </div>
 );
 
 const CheckboxCard: React.FC<{
@@ -37,13 +43,11 @@ const CheckboxCard: React.FC<{
 
 const ApplicationStep: React.FC<ApplicationStepProps> = ({ data, updateData }) => {
 
-    const handleApplicationTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value as 'SYSTEMIC' | 'CONTACT';
-        const otherType = value === 'SYSTEMIC' ? 'CONTACT' : 'SYSTEMIC';
-        const newTags = (data.tags || []).filter(tag => tag !== otherType);
-        if (!newTags.includes(value)) {
-            newTags.push(value);
-        }
+    const toggleApplicationTag = (tag: PesticideTag) => {
+        const currentTags = data.tags || [];
+        const newTags = currentTags.includes(tag)
+            ? currentTags.filter(t => t !== tag)
+            : [...currentTags, tag];
         updateData({ tags: newTags });
     };
 
@@ -80,9 +84,35 @@ const ApplicationStep: React.FC<ApplicationStepProps> = ({ data, updateData }) =
         <div className="max-w-xl mx-auto space-y-6">
             <div>
                 <h4 className="text-md font-semibold text-gray-700 dark:text-gray-200 mb-2">Type d'application *</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <RadioCard name="applicationType" value="SYSTEMIC" label="Systémique" description="Absorbed and transported throughout plant tissues" checked={(data.tags || []).includes('SYSTEMIC')} onChange={handleApplicationTypeChange} />
-                    <RadioCard name="applicationType" value="CONTACT" label="Contact" description="Acts on direct contact with target organism" checked={(data.tags || []).includes('CONTACT')} onChange={handleApplicationTypeChange} />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <SelectableCard 
+                        label="Systémique" 
+                        description="Absorbed and transported" 
+                        checked={(data.tags || []).includes('SYSTEMIC')} 
+                        onChange={() => toggleApplicationTag('SYSTEMIC')} 
+                    />
+                    <SelectableCard 
+                        label="Contact" 
+                        description="Acts on direct contact" 
+                        checked={(data.tags || []).includes('CONTACT')} 
+                        onChange={() => toggleApplicationTag('CONTACT')} 
+                    />
+                    {(data.tags || []).includes('INGESTION') ? (
+                         <SelectableCard 
+                            label="Ingestion" 
+                            description="Acts upon ingestion" 
+                            checked={true} 
+                            onChange={() => toggleApplicationTag('INGESTION')} 
+                        />
+                    ) : (
+                        <button 
+                            onClick={() => toggleApplicationTag('INGESTION')}
+                            className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all min-h-[100px]"
+                        >
+                            <span className="text-2xl text-blue-500 mb-1 font-light">+</span>
+                            <span className="text-blue-500 font-medium text-center">ajouter Ingestion type</span>
+                        </button>
+                    )}
                 </div>
             </div>
              <div>

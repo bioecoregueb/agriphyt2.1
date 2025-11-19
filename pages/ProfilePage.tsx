@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { Page } from '../types';
 import GoogleDriveModal from '../components/GoogleDriveModal';
 // Fix: Import `CheckCircle2Icon` to resolve reference errors.
 import { 
     UserIcon, MailIcon, GoogleIcon, DatabaseIcon, PlusCircleIcon, SearchIcon, SettingsIcon,
     BellIcon, MoonIcon, GlobeIcon, AlertTriangleIcon, Trash2Icon, LogOutIcon, UserCircleIcon, 
-    PencilIcon, ArchiveIcon, CheckIcon, UnplugIcon, CheckCircle2Icon, SunIcon
+    PencilIcon, ArchiveIcon, CheckIcon, UnplugIcon, CheckCircle2Icon, SunIcon, UploadCloudIcon
 } from '../components/Icons';
 
 interface ProfilePageProps {
@@ -17,6 +18,8 @@ interface ProfilePageProps {
     onDeleteAllData: () => void;
     theme: 'light' | 'dark';
     onToggleTheme: () => void;
+    onImportIracPdf: (file: File) => Promise<void>;
+    showNotification: (message: string, type?: 'success' | 'error') => void;
 }
 
 const Card: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => (
@@ -32,9 +35,33 @@ const CardTitle: React.FC<{ icon: React.ReactNode, title: string }> = ({ icon, t
   </div>
 );
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ compoundsCount, isGoogleIntegrated, onToggleGoogleIntegration, onNavigate, onLogout, onDeleteAllData, theme, onToggleTheme }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ compoundsCount, isGoogleIntegrated, onToggleGoogleIntegration, onNavigate, onLogout, onDeleteAllData, theme, onToggleTheme, onImportIracPdf, showNotification }) => {
   const [showDriveModal, setShowDriveModal] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file && file.type === 'application/pdf') {
+          setIsImporting(true);
+          try {
+              await onImportIracPdf(file);
+          } catch (error) {
+              console.error("Import failed", error);
+          } finally {
+              setIsImporting(false);
+          }
+      }
+      // Reset file input
+      if (event.target) event.target.value = '';
+  };
+
+  const triggerFileSelect = () => fileInputRef.current?.click();
+
+  const handleClearCache = () => {
+    alert('Application cache has been cleared!');
+  };
+
   return (
     <>
     <div className="space-y-6 animate-fadeIn">
@@ -76,6 +103,25 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ compoundsCount, isGoogleInteg
                             <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary-dark text-xs font-medium rounded-full">Agronomist</span>
                         </div>
                     </div>
+                </Card>
+
+                <Card>
+                    <CardTitle icon={<UploadCloudIcon className="h-5 w-5"/>} title="Data Sources" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Import classification data from official documents to improve data entry accuracy.</p>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        accept="application/pdf"
+                        className="hidden"
+                    />
+                    <button 
+                        onClick={triggerFileSelect}
+                        disabled={isImporting}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-50 text-purple-700 font-semibold rounded-lg text-sm hover:bg-purple-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed dark:bg-purple-500/10 dark:text-purple-300 dark:hover:bg-purple-500/20 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
+                    >
+                       {isImporting ? 'Processing PDF...' : 'Import IRAC PDF'}
+                    </button>
                 </Card>
 
                 <Card>
@@ -190,7 +236,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ compoundsCount, isGoogleInteg
                         >
                            <ArchiveIcon className="h-4 w-4"/> Backup & Restore
                         </button>
-                        <button className="w-full flex items-center justify-center gap-2 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg text-sm hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                        <button onClick={handleClearCache} className="w-full flex items-center justify-center gap-2 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg text-sm hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
                             <Trash2Icon className="h-4 w-4"/> Clear Cache
                         </button>
                     </div>

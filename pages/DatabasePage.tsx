@@ -3,12 +3,11 @@ import React, { useState, useRef, useMemo } from 'react';
 import PesticideCard from '../components/PesticideCard';
 import CompatibilityCheckerModal from '../components/CompatibilityCheckerModal';
 import SafetyModal from '../components/SafetyModal';
-import RulesManagerModal from '../components/RulesManagerModal';
 import PesticideDetailModal from '../components/PesticideDetailModal';
 import { Pesticide } from '../types';
 import { 
   SearchIcon, SlidersHorizontalIcon, FlaskConicalIcon, 
-  ShieldIcon, BookTextIcon, UploadCloudIcon, DownloadCloudIcon, SparklesIcon,
+  ShieldIcon, BookTextIcon, UploadCloudIcon, DownloadCloudIcon,
   RotateCcwIcon
 } from '../components/Icons';
 
@@ -16,7 +15,9 @@ interface DatabasePageProps {
   compounds: Pesticide[];
   onImport: (data: Pesticide[]) => void;
   onEdit: (pesticide: Pesticide) => void;
-  onDelete: (id: number) => void;
+  onDeleteRequest: (id: number) => void;
+  showNotification: (message: string, type?: 'success' | 'error') => void;
+  onOpenRules: () => void;
 }
 
 const ActionButton: React.FC<{ 
@@ -24,18 +25,18 @@ const ActionButton: React.FC<{
   label: string; 
   colorClasses: string; 
   onClick?: () => void;
-}> = ({ icon, label, colorClasses, onClick }) => (
-  <button onClick={onClick} className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${colorClasses}`}>
+  disabled?: boolean;
+}> = ({ icon, label, colorClasses, onClick, disabled }) => (
+  <button onClick={onClick} disabled={disabled} className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${colorClasses} ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}>
     {icon}
     <span>{label}</span>
   </button>
 );
 
-const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit, onDelete }) => {
+const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit, onDeleteRequest, showNotification, onOpenRules }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCompatibilityModal, setShowCompatibilityModal] = useState(false);
   const [showSafetyModal, setShowSafetyModal] = useState(false);
-  const [showRulesModal, setShowRulesModal] = useState(false);
   const [selectedCompound, setSelectedCompound] = useState<Pesticide | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,6 +94,22 @@ const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit
     });
   }, [compounds, searchQuery, activeFilters]);
 
+  // Group by Active Ingredient
+  const groupedCompounds = useMemo(() => {
+    const groups: Record<string, Pesticide[]> = {};
+    filteredCompounds.forEach(compound => {
+        const key = compound.activeIngredient || 'Unknown Ingredient';
+        if (!groups[key]) {
+            groups[key] = [];
+        }
+        groups[key].push(compound);
+    });
+    return groups;
+  }, [filteredCompounds]);
+
+  const sortedIngredients = useMemo(() => Object.keys(groupedCompounds).sort(), [groupedCompounds]);
+
+
   const handleExport = () => {
     const dataStr = JSON.stringify(compounds, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -122,7 +139,7 @@ const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit
             }
           }
         } catch (error) {
-          alert('Failed to import data. Please check the file format.');
+          showNotification('Failed to import data. Please check the file format.', 'error');
           console.error("Import Error:", error);
         }
       };
@@ -137,7 +154,7 @@ const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit
   };
 
   const handleUpdate = () => {
-    alert('Simulating data sync... Database is up to date!');
+    showNotification('Simulating data sync... Database is up to date!', 'success');
   };
 
   return (
@@ -197,10 +214,19 @@ const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit
                 <span>Filters</span>
                 {activeFilterCount > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white text-xs">{activeFilterCount}</span>}
             </button>
-            <ActionButton icon={<FlaskConicalIcon className="h-4 w-4"/>} label="Tank Mix" colorClasses="bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:hover:bg-purple-500/20" onClick={() => setShowCompatibilityModal(true)} />
-            <ActionButton icon={<ShieldIcon className="h-4 w-4"/>} label="Safety" colorClasses="bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/20" onClick={() => setShowSafetyModal(true)} />
-            <ActionButton icon={<BookTextIcon className="h-4 w-4"/>} label="Rules" colorClasses="bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20" onClick={() => setShowRulesModal(true)} />
-            <ActionButton icon={<RotateCcwIcon className="h-4 w-4"/>} label="Update" colorClasses="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:hover:bg-yellow-500/20" onClick={handleUpdate} />
+            {compounds.length > 0 && (
+              <>
+                <ActionButton icon={<FlaskConicalIcon className="h-4 w-4"/>} label="Tank Mix" colorClasses="bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:hover:bg-purple-500/20" onClick={() => setShowCompatibilityModal(true)} />
+                <ActionButton icon={<ShieldIcon className="h-4 w-4"/>} label="Safety" colorClasses="bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/20" onClick={() => setShowSafetyModal(true)} />
+                <ActionButton icon={<BookTextIcon className="h-4 w-4"/>} label="Rules" colorClasses="bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20" onClick={onOpenRules} />
+              </>
+            )}
+            <ActionButton 
+              icon={<RotateCcwIcon className="h-4 w-4"/>} 
+              label={'Update'} 
+              colorClasses="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:hover:bg-yellow-500/20" 
+              onClick={handleUpdate}
+            />
             <ActionButton icon={<UploadCloudIcon className="h-4 w-4"/>} label="Import" colorClasses="bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20" onClick={triggerImport} />
             <ActionButton icon={<DownloadCloudIcon className="h-4 w-4"/>} label="Export" colorClasses="bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-500/10 dark:text-green-300 dark:hover:bg-green-500/20" onClick={handleExport} />
             <input
@@ -216,23 +242,38 @@ const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit
         {/* Compound List */}
         <div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Showing {filteredCompounds.length} of {compounds.length} compounds</p>
-            <div className="space-y-4">
-                {filteredCompounds.length > 0 ? (
-                    filteredCompounds.map(pesticide => (
-                        <PesticideCard 
-                            key={pesticide.id} 
-                            pesticide={pesticide} 
-                            onViewDetails={() => setSelectedCompound(pesticide)}
-                            onEdit={() => onEdit(pesticide)}
-                            onDelete={() => onDelete(pesticide.id)}
-                        />
+            <div className="space-y-8">
+                {sortedIngredients.length > 0 ? (
+                    sortedIngredients.map(ingredient => (
+                        <div key={ingredient}>
+                             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                                <div className="bg-secondary/10 p-1.5 rounded-md">
+                                    <FlaskConicalIcon className="h-5 w-5 text-secondary" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{ingredient}</h3>
+                                <span className="text-xs font-medium px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300">
+                                    {groupedCompounds[ingredient].length}
+                                </span>
+                            </div>
+                            <div className="space-y-4">
+                                {groupedCompounds[ingredient].map(pesticide => (
+                                    <PesticideCard 
+                                        key={pesticide.id} 
+                                        pesticide={pesticide} 
+                                        onViewDetails={() => setSelectedCompound(pesticide)}
+                                        onEdit={() => onEdit(pesticide)}
+                                        onDelete={() => onDeleteRequest(pesticide.id)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     ))
                 ) : (
                     <div className="text-center py-12 bg-gray-50/50 dark:bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
                         <SearchIcon className="mx-auto h-12 w-12 text-gray-400" />
                         <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">No compounds found</h3>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Your search for "{searchQuery}" did not match any compounds.
+                            {searchQuery ? `Your search for "${searchQuery}" did not match any compounds.` : "There are no compounds in your database yet. Add one to get started!"}
                         </p>
                     </div>
                 )}
@@ -248,11 +289,6 @@ const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit
       <SafetyModal 
         isOpen={showSafetyModal}
         onClose={() => setShowSafetyModal(false)}
-      />
-      <RulesManagerModal
-        isOpen={showRulesModal}
-        onClose={() => setShowRulesModal(false)}
-        pesticides={compounds}
       />
       <PesticideDetailModal
         isOpen={!!selectedCompound}

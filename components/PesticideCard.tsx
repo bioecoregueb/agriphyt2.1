@@ -1,6 +1,8 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Pesticide, PesticideTag } from '../types';
 import { InfoIcon, TargetIcon, PencilIcon, TrashIcon, MoreVerticalIcon } from './Icons';
+import { getModeOfActionCategory } from '../lib/utils';
 
 interface PesticideCardProps {
   pesticide: Pesticide;
@@ -14,6 +16,7 @@ const tagColors: Record<PesticideTag, string> = {
   CONTACT: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
   CURATIVE: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300',
   PREVENTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+  INGESTION: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
 };
 
 const ActionMenu: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({ onEdit, onDelete }) => {
@@ -77,6 +80,8 @@ const ActionMenu: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({ on
 
 
 const PesticideCard: React.FC<PesticideCardProps> = ({ pesticide, onViewDetails, onEdit, onDelete }) => {
+  const moaInfo = getModeOfActionCategory(pesticide.modeOfAction);
+
   return (
     <div 
       onClick={onViewDetails}
@@ -109,12 +114,25 @@ const PesticideCard: React.FC<PesticideCardProps> = ({ pesticide, onViewDetails,
         </div>
         <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
             <InfoIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
-            <span><span className="font-semibold text-gray-700 dark:text-gray-300">IRAC:</span> {pesticide.irac}</span>
+            <div className="flex items-center">
+              <span className="font-semibold text-gray-700 dark:text-gray-300">IRAC/FRAC:</span>
+              <span className="ml-1">{pesticide.irac}</span>
+              <span className={`ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full ${moaInfo.styles.bg} ${moaInfo.styles.text}`}>
+                  <span className={`h-2 w-2 rounded-full ${moaInfo.styles.dot}`}></span>
+                  {moaInfo.category}
+              </span>
+            </div>
         </div>
         <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
             <TargetIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
             <span><span className="font-semibold text-gray-700 dark:text-gray-300">Target Stage:</span> {pesticide.targetStage.join(', ')}</span>
         </div>
+        {pesticide.chemicalDetails && (
+            <div className="md:col-span-2 flex items-center space-x-2 text-gray-600 dark:text-gray-400">
+                <InfoIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <span><span className="font-semibold text-gray-700 dark:text-gray-300">Details:</span> {pesticide.chemicalDetails}</span>
+            </div>
+        )}
       </div>
       
       <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">

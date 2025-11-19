@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Pesticide } from '../../types';
 import { CheckCircle2Icon } from '../Icons';
+import { getModeOfActionCategory } from '../../lib/utils';
 
 interface ReviewStepProps {
   data: Partial<Pesticide>;
@@ -18,6 +20,8 @@ const Tag: React.FC<{ children: React.ReactNode, color: string }> = ({ children,
 );
 
 const ReviewStep: React.FC<ReviewStepProps> = ({ data }) => {
+  const moaInfo = getModeOfActionCategory(data.modeOfAction || '');
+  
   return (
     <div className="space-y-8 animate-fadeIn">
         <div className="flex flex-col items-center text-center">
@@ -33,22 +37,37 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ data }) => {
             
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <DetailItem label="Commercial Name" value={data.name} />
-                <DetailItem label="Dosage" value={data.dosage} />
+                <DetailItem label="Type" value={<span className="font-bold text-primary dark:text-primary/90">{data.type}</span>} />
                 <DetailItem label="Active Ingredient" value={data.activeIngredient} />
+                <DetailItem label="Dosage" value={data.dosage} />
                 <DetailItem label="Chemical Family" value={data.family} />
-                <DetailItem label="IRAC Code" value={data.irac} />
+                <DetailItem label="IRAC/FRAC Code" value={data.irac} />
                 <DetailItem label="LogP" value={data.logP} />
                 <DetailItem label="pH" value={data.ph} />
                 <div className="col-span-2">
-                    <DetailItem label="General Mode of Action" value={data.modeOfAction} />
+                   <div>
+                        <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400">General Mode of Action</h5>
+                        <div className="flex items-center gap-3 mt-1">
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full ${moaInfo.styles.bg} ${moaInfo.styles.text}`}>
+                                <span className={`h-2 w-2 rounded-full ${moaInfo.styles.dot}`}></span>
+                                {moaInfo.category}
+                            </span>
+                            <p className="text-md text-gray-800 dark:text-gray-100">{data.modeOfAction || '-'}</p>
+                        </div>
+                    </div>
                 </div>
+                {data.chemicalDetails && (
+                    <div className="col-span-2">
+                        <DetailItem label="Chemical Details" value={data.chemicalDetails} />
+                    </div>
+                )}
             </div>
 
             <div>
                 <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Application & Objective</h5>
                 <div className="flex flex-wrap gap-2">
                     {(data.tags || []).map(tag => (
-                        <Tag key={tag} color={ tag === 'SYSTEMIC' || tag === 'CONTACT' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' : 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300'}>
+                        <Tag key={tag} color={ tag === 'SYSTEMIC' || tag === 'CONTACT' || tag === 'INGESTION' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' : 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300'}>
                             {tag}
                         </Tag>
                     ))}

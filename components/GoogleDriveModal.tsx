@@ -33,6 +33,9 @@ const GoogleDriveModal: React.FC<GoogleDriveModalProps> = ({ isOpen, onClose }) 
         </div>
         
         <div className="p-6 overflow-y-auto">
+            <div className="p-3 mb-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-500/30 rounded-lg text-sm text-yellow-800 dark:text-yellow-300">
+                <strong>Note:</strong> This is a simulation. In a real application, you could manage your actual Google Drive backups here.
+            </div>
             <div className="space-y-3">
                 {mockFiles.map(file => (
                     <div key={file.name} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg">
