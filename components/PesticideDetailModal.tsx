@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { Pesticide, PesticideTag } from '../types';
-import { XIcon, BeakerIcon, SparklesIcon } from './Icons';
+import { XIcon, BeakerIcon, SparklesIcon, StarIcon } from './Icons';
 import { getSafetyInfo } from '../lib/gemini';
-import { getModeOfActionCategory } from '../lib/utils';
+import { getModeOfActionCategory, getCodeLabel } from '../lib/utils';
 import { marked } from 'marked';
 
 
@@ -21,12 +21,12 @@ const tagColors: Record<PesticideTag, string> = {
   INGESTION: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
 };
 
-const DetailItem: React.FC<{ label: string; value: string | string[] }> = ({ label, value }) => (
+const DetailItem: React.FC<{ label: string; value: string | React.ReactNode }> = ({ label, value }) => (
   <div>
     <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</h4>
-    <p className="text-base text-gray-800 dark:text-gray-100 font-semibold">
-      {Array.isArray(value) ? value.join(', ') : value}
-    </p>
+    <div className="text-base text-gray-800 dark:text-gray-100 font-semibold">
+      {value}
+    </div>
   </div>
 );
 
@@ -88,7 +88,7 @@ const PesticideDetailModal: React.FC<PesticideDetailModalProps> = ({ isOpen, onC
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <DetailItem label="Active Ingredient" value={pesticide.activeIngredient} />
             <DetailItem label="Chemical Family" value={pesticide.family} />
-            <DetailItem label="IRAC/FRAC Code" value={pesticide.irac} />
+            <DetailItem label={getCodeLabel(pesticide.type)} value={pesticide.irac} />
             <DetailItem label="Dosage" value={pesticide.dosage} />
             <DetailItem label="LogP" value={pesticide.logP} />
             <DetailItem label="pH" value={pesticide.ph} />
@@ -111,7 +111,20 @@ const PesticideDetailModal: React.FC<PesticideDetailModalProps> = ({ isOpen, onC
               </div>
             )}
             <div className="md:col-span-2">
-              <DetailItem label="Target Stage" value={pesticide.targetStage} />
+              <DetailItem label="Target Stage" value={
+                 <div className="flex flex-wrap gap-2 mt-1">
+                    {pesticide.targetStage.map((stage, idx) => (
+                        <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-sm">
+                            {stage.stage}
+                            <span className="flex text-yellow-400">
+                                {[...Array(stage.rating)].map((_, i) => (
+                                    <StarIcon key={i} className="h-3 w-3" fill />
+                                ))}
+                            </span>
+                        </span>
+                    ))}
+                </div>
+              } />
             </div>
           </div>
 

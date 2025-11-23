@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { Pesticide, PesticideTag } from '../../types';
-import { SprayCanIcon } from '../Icons';
+import React, { useMemo } from 'react';
+import { Pesticide, PesticideTag, TargetStageEvaluation } from '../../types';
+import { SprayCanIcon, StarIcon } from '../Icons';
 
 interface ApplicationStepProps {
   data: Partial<Pesticide>;
@@ -41,6 +41,70 @@ const CheckboxCard: React.FC<{
     </label>
 );
 
+const StageRatingCard: React.FC<{
+    value: string;
+    label: string;
+    description: string;
+    evaluation?: TargetStageEvaluation;
+    onUpdate: (evalData: TargetStageEvaluation | null) => void;
+}> = ({ value, label, description, evaluation, onUpdate }) => {
+    const isChecked = !!evaluation;
+    const rating = evaluation?.rating || 0;
+
+    const handleCheckboxChange = () => {
+        if (isChecked) {
+            onUpdate(null);
+        } else {
+            onUpdate({ stage: value, rating: 5 }); // Default to 5 stars
+        }
+    };
+
+    const handleRatingChange = (newRating: number, e: React.MouseEvent) => {
+        e.preventDefault(); // Prevent toggling the checkbox
+        e.stopPropagation();
+        if (isChecked) {
+            onUpdate({ stage: value, rating: newRating });
+        }
+    };
+
+    return (
+        <div className={`block p-4 border rounded-lg transition-all ${isChecked ? 'bg-green-50 dark:bg-primary/20 border-primary ring-2 ring-primary' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}`}>
+            <div className="flex items-start justify-between cursor-pointer" onClick={handleCheckboxChange}>
+                <div className="flex items-start">
+                    <div className={`w-5 h-5 mr-4 mt-0.5 border-2 rounded flex-shrink-0 ${isChecked ? 'bg-primary border-primary' : 'border-gray-300 dark:border-gray-500'}`}>
+                        {isChecked && <svg className="text-white w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M20 6L9 17l-5-5"/></svg>}
+                    </div>
+                    <div>
+                        <p className="font-bold text-gray-800 dark:text-gray-100">{label}</p>
+                        {description && <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>}
+                    </div>
+                </div>
+            </div>
+            
+            {isChecked && (
+                <div className="mt-3 pl-9 border-t border-gray-200 dark:border-gray-600 pt-2 flex items-center gap-2">
+                    <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">Efficacy:</span>
+                    <div className="flex">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                                key={star}
+                                type="button"
+                                onClick={(e) => handleRatingChange(star, e)}
+                                className="focus:outline-none transition-transform active:scale-110"
+                            >
+                                <StarIcon 
+                                    className={`w-5 h-5 ${star <= rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-500'}`} 
+                                    fill={star <= rating}
+                                />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const ApplicationStep: React.FC<ApplicationStepProps> = ({ data, updateData }) => {
 
     const toggleApplicationTag = (tag: PesticideTag) => {
@@ -51,12 +115,23 @@ const ApplicationStep: React.FC<ApplicationStepProps> = ({ data, updateData }) =
         updateData({ tags: newTags });
     };
 
-    const handleMultiSelectChange = (group: keyof Pesticide, value: string) => {
-        const currentValues = (data[group] as string[] || []) as string[];
-        const newValues = currentValues.includes(value)
-            ? currentValues.filter(v => v !== value)
-            : [...currentValues, value];
-        updateData({ [group]: newValues });
+    const handleStageUpdate = (stageValue: string, evaluation: TargetStageEvaluation | null) => {
+        const currentStages = data.targetStage || [];
+        let newStages: TargetStageEvaluation[];
+
+        if (evaluation === null) {
+            // Remove
+            newStages = currentStages.filter(s => s.stage !== stageValue);
+        } else {
+            // Add or Update
+            const exists = currentStages.some(s => s.stage === stageValue);
+            if (exists) {
+                newStages = currentStages.map(s => s.stage === stageValue ? evaluation : s);
+            } else {
+                newStages = [...currentStages, evaluation];
+            }
+        }
+        updateData({ targetStage: newStages });
     };
 
     const handleObjectiveChange = (value: string) => {
@@ -70,6 +145,26 @@ const ApplicationStep: React.FC<ApplicationStepProps> = ({ data, updateData }) =
         
         updateData({ tags: [...otherTags, ...filteredTags] });
     };
+
+    // Stage configuration based on pesticide type
+    const stageOptions = useMemo(() => {
+        if (data.type === 'Fongicide') {
+            return [
+                { value: 'Oomycètes', label: 'Oomycètes', description: 'Mildiou, Pythium, Phytophthora' },
+                { value: 'Ascomycètes', label: 'Ascomycètes', description: 'Oïdium, Alternaria, Septoria, Botrytis…' },
+                { value: 'Basidiomycètes', label: 'Basidiomycètes', description: 'Rouilles, charbons…' },
+                { value: 'Champignons du sol', label: 'Champignons du sol', description: 'Sclerotinia, Fusarium, Rhizoctonia…' },
+            ];
+        } else {
+            // Default for Insecticide, Herbicide, etc.
+            return [
+                { value: 'Œuf', label: 'Œuf', description: 'Egg stage of pest lifecycle' },
+                { value: 'Larve', label: 'Larve', description: 'Larval stage of pest lifecycle' },
+                { value: 'Nymphe', label: 'Nymphe', description: 'Nymph stage of pest lifecycle' },
+                { value: 'Adulte', label: 'Adulte', description: 'Adult stage of pest lifecycle' },
+            ];
+        }
+    }, [data.type]);
   
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -125,12 +220,18 @@ const ApplicationStep: React.FC<ApplicationStepProps> = ({ data, updateData }) =
             </div>
             <div>
                 <h4 className="text-md font-semibold text-gray-700 dark:text-gray-200 mb-2">Stade cible *</h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Select all that apply</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Select stage and rate efficacy (1-5 stars)</p>
                 <div className="space-y-3">
-                    <CheckboxCard value="Œuf" label="Œuf" description="Egg stage of pest lifecycle" checked={(data.targetStage || []).includes('Œuf')} onChange={(val) => handleMultiSelectChange('targetStage', val)} />
-                    <CheckboxCard value="Larve" label="Larve" description="Larval stage of pest lifecycle" checked={(data.targetStage || []).includes('Larve')} onChange={(val) => handleMultiSelectChange('targetStage', val)} />
-                    <CheckboxCard value="Nymphe" label="Nymphe" description="Nymph stage of pest lifecycle" checked={(data.targetStage || []).includes('Nymphe')} onChange={(val) => handleMultiSelectChange('targetStage', val)} />
-                    <CheckboxCard value="Adulte" label="Adulte" description="Adult stage of pest lifecycle" checked={(data.targetStage || []).includes('Adulte')} onChange={(val) => handleMultiSelectChange('targetStage', val)} />
+                    {stageOptions.map(option => (
+                        <StageRatingCard
+                            key={option.value}
+                            value={option.value}
+                            label={option.label}
+                            description={option.description}
+                            evaluation={(data.targetStage || []).find(s => s.stage === option.value)}
+                            onUpdate={(evaluation) => handleStageUpdate(option.value, evaluation)}
+                        />
+                    ))}
                 </div>
             </div>
         </div>

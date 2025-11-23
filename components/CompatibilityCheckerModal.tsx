@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Pesticide } from '../types';
 import { XIcon, CheckIcon, FlaskConicalIcon, InfoIcon, TrashIcon } from './Icons';
 import { getCompatibilityInfo } from '../lib/gemini';
+import { getCodeLabel } from '../lib/utils';
 import { marked } from 'marked';
 
 interface CompatibilityCheckerModalProps {
@@ -26,7 +27,7 @@ const CompoundSelectItem: React.FC<{
       <div>
         <p className="font-bold text-gray-800 dark:text-gray-100">{compound.name}</p>
         <p className="text-xs text-gray-500 dark:text-gray-400">{compound.activeIngredient}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">IRAC: {compound.irac}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{getCodeLabel(compound.type)}: {compound.irac}</p>
       </div>
       <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isSelected ? 'bg-secondary' : 'border-2 border-gray-300 dark:border-gray-500'}`}>
         {isSelected && <CheckIcon className="w-3 h-3 text-white" />}

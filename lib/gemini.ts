@@ -1,8 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Check if API key is available
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+// Assume process.env.API_KEY is configured in the environment
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 async function fileToGenerativePart(file: File) {
     return new Promise((resolve, reject) => {
@@ -25,10 +24,6 @@ async function fileToGenerativePart(file: File) {
 }
 
 export async function getSafetyInfo(ingredientName: string): Promise<string> {
-  if (!ai) {
-    return "AI safety analysis is not available. Please configure the GEMINI_API_KEY in your environment to enable this feature.";
-  }
-
   try {
     const prompt = `Provide a concise safety analysis for the pesticide active ingredient "${ingredientName}". Focus on key hazards for applicators (e.g., PPE requirements, inhalation/dermal risks) and primary environmental concerns (e.g., aquatic toxicity, pollinator risks). Present the information in clear, easy-to-understand bullet points using markdown. Do not include a preamble or conclusion, just the direct analysis.`;
 
@@ -36,7 +31,7 @@ export async function getSafetyInfo(ingredientName: string): Promise<string> {
       model: 'gemini-2.5-flash-lite',
       contents: prompt,
     });
-
+    
     return response.text;
   } catch (error) {
     console.error("Gemini API error:", error);
@@ -45,14 +40,10 @@ export async function getSafetyInfo(ingredientName: string): Promise<string> {
 }
 
 export async function getCompatibilityInfo(pesticides: { name: string, family: string }[]): Promise<string> {
-    if (!ai) {
-        return "AI compatibility analysis is not available. Please configure the GEMINI_API_KEY in your environment to enable this feature.";
-    }
-
     try {
         const pesticideList = pesticides.map(p => `${p.name} (Family: ${p.family})`).join(', ');
-        const prompt = `Analyze the compatibility of mixing the following pesticides: ${pesticideList}.
-        Based on their chemical families, provide a summary of potential risks (e.g., phytotoxicity, reduced efficacy, precipitate formation) or synergies.
+        const prompt = `Analyze the compatibility of mixing the following pesticides: ${pesticideList}. 
+        Based on their chemical families, provide a summary of potential risks (e.g., phytotoxicity, reduced efficacy, precipitate formation) or synergies. 
         Conclude with a clear recommendation: "Safe to Mix", "Use with Caution", or "Do Not Mix".
         Format the response in markdown with a main heading for the recommendation and bullet points for the analysis. Do not include a preamble.`;
 
@@ -70,10 +61,6 @@ export async function getCompatibilityInfo(pesticides: { name: string, family: s
 
 
 export async function parseIracPdf(pdfFile: File): Promise<{ code: string; modeOfAction: string }[]> {
-    if (!ai) {
-        throw new Error("AI PDF parsing is not available. Please configure the GEMINI_API_KEY in your environment to enable this feature.");
-    }
-
     try {
         const pdfPart = await fileToGenerativePart(pdfFile);
 

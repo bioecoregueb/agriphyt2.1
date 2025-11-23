@@ -52,8 +52,8 @@ const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit
     return [...new Set(modes)].sort();
   }, [compounds]);
 
-  const allTags = ['SYSTEMIC', 'CONTACT', 'CURATIVE', 'PREVENTIVE'];
-  const allTargetStages = ['Œuf', 'Larve', 'Nymphe', 'Adulte'];
+  const allTags = ['SYSTEMIC', 'CONTACT', 'CURATIVE', 'PREVENTIVE', 'INGESTION'];
+  const allTargetStages = ['Œuf', 'Larve', 'Nymphe', 'Adulte', 'Oomycètes', 'Ascomycètes', 'Basidiomycètes', 'Champignons du sol'];
 
   const handleFilterChange = (filterType: keyof typeof activeFilters, value: string) => {
     setActiveFilters(prev => {
@@ -87,7 +87,7 @@ const DatabasePage: React.FC<DatabasePageProps> = ({ compounds, onImport, onEdit
 
         // Advanced filters
         const matchesTags = activeFilters.tags.length === 0 || activeFilters.tags.every(tag => compound.tags.includes(tag as any));
-        const matchesTargetStage = activeFilters.targetStage.length === 0 || activeFilters.targetStage.some(stage => compound.targetStage.includes(stage));
+        const matchesTargetStage = activeFilters.targetStage.length === 0 || activeFilters.targetStage.some(filterStage => compound.targetStage.some(compoundStage => compoundStage.stage === filterStage));
         const matchesModeOfAction = !activeFilters.modeOfAction || compound.modeOfAction === activeFilters.modeOfAction;
 
         return matchesSearch && matchesTags && matchesTargetStage && matchesModeOfAction;

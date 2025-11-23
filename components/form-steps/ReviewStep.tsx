@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Pesticide } from '../../types';
-import { CheckCircle2Icon } from '../Icons';
-import { getModeOfActionCategory } from '../../lib/utils';
+import { CheckCircle2Icon, StarIcon } from '../Icons';
+import { getModeOfActionCategory, getCodeLabel } from '../../lib/utils';
 
 interface ReviewStepProps {
   data: Partial<Pesticide>;
@@ -11,7 +11,7 @@ interface ReviewStepProps {
 const DetailItem: React.FC<{ label: string, value: React.ReactNode }> = ({ label, value }) => (
     <div>
         <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</h5>
-        <p className="text-md text-gray-800 dark:text-gray-100">{value || '-'}</p>
+        <div className="text-md text-gray-800 dark:text-gray-100">{value || '-'}</div>
     </div>
 );
 
@@ -41,7 +41,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ data }) => {
                 <DetailItem label="Active Ingredient" value={data.activeIngredient} />
                 <DetailItem label="Dosage" value={data.dosage} />
                 <DetailItem label="Chemical Family" value={data.family} />
-                <DetailItem label="IRAC/FRAC Code" value={data.irac} />
+                <DetailItem label={getCodeLabel(data.type)} value={data.irac} />
                 <DetailItem label="LogP" value={data.logP} />
                 <DetailItem label="pH" value={data.ph} />
                 <div className="col-span-2">
@@ -77,7 +77,16 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ data }) => {
             <div>
                 <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Target Stage</h5>
                 <div className="flex flex-wrap gap-2">
-                    {(data.targetStage || []).map(stage => <Tag key={stage} color="bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">{stage}</Tag>)}
+                    {(data.targetStage || []).map((stage, idx) => (
+                        <Tag key={idx} color="bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">
+                            <div className="flex items-center gap-1">
+                                {stage.stage}
+                                <div className="flex text-yellow-500/70">
+                                    {[...Array(stage.rating)].map((_, i) => <StarIcon key={i} className="w-3 h-3" fill />)}
+                                </div>
+                            </div>
+                        </Tag>
+                    ))}
                 </div>
             </div>
 

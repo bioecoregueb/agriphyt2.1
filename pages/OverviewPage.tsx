@@ -3,8 +3,9 @@ import React from 'react';
 import { Pesticide, PesticideTag, Page } from '../types';
 import { 
     PlusIcon, FlaskConicalIcon, DatabaseIcon, ArchiveIcon, TargetIcon, ShieldIcon, BarChartIcon,
-    CloudIcon, MapPinIcon, WindIcon, DropletsIcon, CheckCircle2Icon, PlusCircleIcon, UserIcon, InfoIcon
+    CloudIcon, MapPinIcon, WindIcon, DropletsIcon, CheckCircle2Icon, PlusCircleIcon, UserIcon, InfoIcon, StarIcon
 } from '../components/Icons';
+import { getCodeLabel } from '../lib/utils';
 
 interface OverviewPageProps {
   compounds: Pesticide[];
@@ -48,11 +49,11 @@ const RecentCompoundItem: React.FC<{ pesticide: Pesticide }> = ({ pesticide }) =
             </div>
             <div className="text-right text-xs text-gray-500 dark:text-gray-400">
                 <p className="font-semibold">{pesticide.family}</p>
-                <p>{pesticide.targetStage.join(', ')}</p>
+                <p>{pesticide.targetStage.map(s => s.stage).join(', ')}</p>
             </div>
         </div>
         <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-            <p><span className="font-semibold text-gray-700 dark:text-gray-200">IRAC:</span> {pesticide.irac}</p>
+            <p><span className="font-semibold text-gray-700 dark:text-gray-200">{getCodeLabel(pesticide.type)}:</span> {pesticide.irac}</p>
             <p><span className="font-semibold text-gray-700 dark:text-gray-200">Mode of Action:</span> {pesticide.modeOfAction}</p>
             {pesticide.notes && <p className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-2 rounded-md mt-1">{pesticide.notes}</p>}
         </div>

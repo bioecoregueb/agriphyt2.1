@@ -1,4 +1,5 @@
-import { ModeOfActionCategory, ModeOfActionInfo } from '../types';
+
+import { ModeOfActionCategory, ModeOfActionInfo, PesticideType } from '../types';
 
 // Define the color schemes for each category
 const categoryStyles: Record<ModeOfActionCategory, { bg: string; text: string; border: string; dot: string; }> = {
@@ -26,4 +27,13 @@ export function getModeOfActionCategory(modeOfAction: string): ModeOfActionInfo 
     }
 
     return { category: 'Unknown / Other', styles: categoryStyles['Unknown / Other'] };
+}
+
+export function getCodeLabel(type: PesticideType | string | undefined): string {
+    if (!type) return 'IRAC/FRAC Code';
+    switch (type) {
+        case 'Insecticide': return 'IRAC Code';
+        case 'Fongicide': return 'FRAC Code';
+        default: return 'IRAC/FRAC Code';
+    }
 }

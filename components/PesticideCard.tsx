@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Pesticide, PesticideTag } from '../types';
-import { InfoIcon, TargetIcon, PencilIcon, TrashIcon, MoreVerticalIcon } from './Icons';
-import { getModeOfActionCategory } from '../lib/utils';
+import { InfoIcon, TargetIcon, PencilIcon, TrashIcon, MoreVerticalIcon, StarIcon } from './Icons';
+import { getModeOfActionCategory, getCodeLabel } from '../lib/utils';
 
 interface PesticideCardProps {
   pesticide: Pesticide;
@@ -115,7 +115,7 @@ const PesticideCard: React.FC<PesticideCardProps> = ({ pesticide, onViewDetails,
         <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
             <InfoIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
             <div className="flex items-center">
-              <span className="font-semibold text-gray-700 dark:text-gray-300">IRAC/FRAC:</span>
+              <span className="font-semibold text-gray-700 dark:text-gray-300">{getCodeLabel(pesticide.type)}:</span>
               <span className="ml-1">{pesticide.irac}</span>
               <span className={`ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full ${moaInfo.styles.bg} ${moaInfo.styles.text}`}>
                   <span className={`h-2 w-2 rounded-full ${moaInfo.styles.dot}`}></span>
@@ -123,9 +123,23 @@ const PesticideCard: React.FC<PesticideCardProps> = ({ pesticide, onViewDetails,
               </span>
             </div>
         </div>
-        <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
-            <TargetIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
-            <span><span className="font-semibold text-gray-700 dark:text-gray-300">Target Stage:</span> {pesticide.targetStage.join(', ')}</span>
+        <div className="flex items-start space-x-2 text-gray-600 dark:text-gray-400">
+            <TargetIcon className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+            <div className="flex flex-col">
+                <span className="font-semibold text-gray-700 dark:text-gray-300">Target Stage:</span>
+                <div className="flex flex-wrap gap-2 mt-1">
+                    {pesticide.targetStage.map((stage, idx) => (
+                        <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+                            {stage.stage}
+                            <span className="flex text-yellow-400">
+                                {[...Array(stage.rating)].map((_, i) => (
+                                    <StarIcon key={i} className="h-3 w-3" fill />
+                                ))}
+                            </span>
+                        </span>
+                    ))}
+                </div>
+            </div>
         </div>
         {pesticide.chemicalDetails && (
             <div className="md:col-span-2 flex items-center space-x-2 text-gray-600 dark:text-gray-400">

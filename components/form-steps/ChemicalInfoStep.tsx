@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Pesticide, PesticideType, IracData } from '../../types';
-import { BeakerIcon, BugIcon, LeafIcon, MicroscopeIcon } from '../Icons';
+import { BeakerIcon, BugIcon, MicroscopeIcon } from '../Icons';
+import { getCodeLabel } from '../../lib/utils';
 
 interface ChemicalInfoStepProps {
   data: Partial<Pesticide>;
@@ -70,6 +71,14 @@ const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, f
 
   const isModeOfActionLocked = !!(iracData && data.irac && iracData.some(d => d.code === data.irac));
 
+  const getCodePlaceholder = () => {
+      switch (data.type) {
+          case 'Insecticide': return 'e.g., 9A';
+          case 'Fongicide': return 'e.g., 3A';
+          default: return 'e.g., Code';
+      }
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
        <div className="flex flex-col items-center text-center">
@@ -83,9 +92,8 @@ const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, f
       <div className="max-w-xl mx-auto space-y-4">
         <div>
           <label className={formLabelClasses}>Type of Active Ingredient *</label>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
               <TypeCard value="Insecticide" label="Insecticide" icon={<BugIcon className="h-7 w-7 text-red-500"/>} selected={data.type === 'Insecticide'} onSelect={(v) => updateData({ type: v })} />
-              <TypeCard value="Herbicide" label="Herbicide" icon={<LeafIcon className="h-7 w-7 text-green-500"/>} selected={data.type === 'Herbicide'} onSelect={(v) => updateData({ type: v })} />
               <TypeCard value="Fongicide" label="Fongicide" icon={<MicroscopeIcon className="h-7 w-7 text-blue-500"/>} selected={data.type === 'Fongicide'} onSelect={(v) => updateData({ type: v })} />
           </div>
         </div>
@@ -131,7 +139,7 @@ const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, f
         </div>
 
         <div>
-          <label htmlFor="irac" className={formLabelClasses}>IRAC/FRAC Code *</label>
+          <label htmlFor="irac" className={formLabelClasses}>{getCodeLabel(data.type)} *</label>
           {iracData ? (
             <select
                 id="irac"
@@ -141,7 +149,7 @@ const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, f
                 className={formFieldClasses}
                 required
             >
-                <option value="" disabled>Select IRAC code...</option>
+                <option value="" disabled>Select {getCodeLabel(data.type)}...</option>
                 {iracData.map(item => <option key={item.code} value={item.code}>{item.code} - {item.modeOfAction.substring(0, 40)}...</option>)}
             </select>
           ) : (
@@ -152,7 +160,7 @@ const ChemicalInfoStep: React.FC<ChemicalInfoStepProps> = ({ data, updateData, f
                 value={data.irac || ''}
                 onChange={(e) => updateData({ irac: e.target.value })}
                 className={formFieldClasses}
-                placeholder="e.g., 9A (Import PDF for options)"
+                placeholder={`${getCodePlaceholder()} (Import PDF for options)`}
                 required
             />
           )}

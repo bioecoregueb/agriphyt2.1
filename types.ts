@@ -1,7 +1,12 @@
 
 export type PesticideTag = 'SYSTEMIC' | 'CONTACT' | 'CURATIVE' | 'PREVENTIVE' | 'INGESTION';
 
-export type PesticideType = 'Insecticide' | 'Herbicide' | 'Fongicide';
+export type PesticideType = 'Insecticide' | 'Fongicide';
+
+export interface TargetStageEvaluation {
+    stage: string;
+    rating: number; // 1 to 5
+}
 
 export interface Pesticide {
   id: number;
@@ -12,7 +17,7 @@ export interface Pesticide {
   family: string;
   irac: string;
   chemicalDetails: string;
-  targetStage: string[];
+  targetStage: TargetStageEvaluation[];
   modeOfAction: string;
   dosage: string;
   targets: string[];
