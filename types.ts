@@ -24,6 +24,7 @@ export interface Pesticide {
   notes: string;
   logP: string;
   ph: string;
+  labelImage?: string; // Base64 string of the uploaded image
 }
 
 export interface CompatibilityRule {

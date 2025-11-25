@@ -31,7 +31,8 @@ const initialFormData: Partial<Pesticide> = {
     targets: [],
     notes: '',
     logP: '',
-    ph: ''
+    ph: '',
+    labelImage: ''
 };
 
 const AddCompoundPage: React.FC<AddCompoundPageProps> = ({ onSaveCompound, existingPesticides, compoundToEdit, showNotification, iracData }) => {
@@ -90,6 +91,7 @@ const AddCompoundPage: React.FC<AddCompoundPageProps> = ({ onSaveCompound, exist
         notes: formData.notes || '',
         logP: formData.logP || 'N/A',
         ph: formData.ph || 'N/A',
+        labelImage: formData.labelImage || '',
     };
 
     if (isEditMode && compoundToEdit) {

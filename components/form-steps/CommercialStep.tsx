@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Pesticide } from '../../types';
-import { StoreIcon, UploadCloudIcon } from '../Icons';
+import { StoreIcon, UploadCloudIcon, TrashIcon } from '../Icons';
 import { targetPests } from '../../data/mockData';
 
 interface CommercialStepProps {
@@ -38,6 +39,27 @@ const CommercialStep: React.FC<CommercialStepProps> = ({ data, updateData }) => 
         updateData({ targets: [...(data.targets || []), customTarget]});
         setCustomTarget('');
     }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File size too large. Please upload an image smaller than 10MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          updateData({ labelImage: reader.result });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    updateData({ labelImage: '' });
   };
 
   const filteredPests = filter === 'All' ? targetPests : targetPests.filter(p => p.category === filter);
@@ -119,17 +141,37 @@ const CommercialStep: React.FC<CommercialStepProps> = ({ data, updateData }) => 
             
             <div>
                  <label className={formLabelClasses}>Product Label</label>
-                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
-                    <div className="space-y-1 text-center">
-                        <UploadCloudIcon className="mx-auto h-12 w-12 text-gray-400" />
-                        <div className="flex text-sm text-gray-600 dark:text-gray-400">
-                            <label htmlFor="file-upload" className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-secondary hover:text-secondary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-secondary">
-                                <span>Upload product label image</span>
-                                <input id="file-upload" name="file-upload" type="file" className="sr-only" />
-                            </label>
+                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md relative bg-white dark:bg-gray-800">
+                    {data.labelImage ? (
+                        <div className="relative w-full">
+                             <img src={data.labelImage} alt="Label Preview" className="mx-auto max-h-60 rounded-md shadow-sm object-contain" />
+                             <button 
+                                onClick={removeImage}
+                                className="absolute top-0 right-0 p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 focus:outline-none translate-x-1/2 -translate-y-1/2 shadow-sm"
+                                title="Remove image"
+                             >
+                                 <TrashIcon className="h-5 w-5" />
+                             </button>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 10MB</p>
-                    </div>
+                    ) : (
+                        <div className="space-y-1 text-center w-full">
+                            <UploadCloudIcon className="mx-auto h-12 w-12 text-gray-400" />
+                            <div className="flex justify-center text-sm text-gray-600 dark:text-gray-400">
+                                <label htmlFor="file-upload" className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-secondary hover:text-secondary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-secondary">
+                                    <span>Upload product label image</span>
+                                    <input 
+                                        id="file-upload" 
+                                        name="file-upload" 
+                                        type="file" 
+                                        className="sr-only" 
+                                        accept="image/png, image/jpeg, image/gif"
+                                        onChange={handleImageUpload}
+                                    />
+                                </label>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

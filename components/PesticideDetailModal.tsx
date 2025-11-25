@@ -139,6 +139,15 @@ const PesticideDetailModal: React.FC<PesticideDetailModalProps> = ({ isOpen, onC
             </div>
           </div>
           
+          {pesticide.labelImage && (
+             <div>
+                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Product Label</h4>
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 bg-gray-50 dark:bg-gray-700/50">
+                    <img src={pesticide.labelImage} alt="Product Label" className="w-full h-auto max-h-80 object-contain rounded" />
+                </div>
+            </div>
+          )}
+          
           {pesticide.notes && (
             <div>
                 <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Notes</h4>
